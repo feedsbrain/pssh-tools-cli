@@ -1,0 +1,42 @@
+{
+  "name": "pssh-tools-cli",
+  "version": "0.0.2-alpha1",
+  "description": "Command Line Interface for PSSH-TOOLS",
+  "main": "index.js",
+  "scripts": {
+    "standard": "standard --fix",
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/feedsbrain/pssh-tools-cli.git"
+  },
+  "keywords": [
+    "pssh",
+    "pssh-tools",
+    "cli",
+    "pssh-box",
+    "drm",
+    "widevine",
+    "cenc",
+    "playready",
+    "marlin"
+  ],
+  "author": "Indra Gunawan <feedsbrain@gmail.com>",
+  "license": "ISC",
+  "bin": {
+    "psshtools": "./index.js"
+  },
+  "bugs": {
+    "url": "https://github.com/feedsbrain/pssh-tools-cli/issues"
+  },
+  "homepage": "https://github.com/feedsbrain/pssh-tools-cli#readme",
+  "dependencies": {
+    "commander": "^2.20.0",
+    "pssh-tools": "0.1.0-alpha2"
+  },
+  "devDependencies": {
+    "ava": "^2.1.0",
+    "standard": "^12.0.1"
+  }
+}
