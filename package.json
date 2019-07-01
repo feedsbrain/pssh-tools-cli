@@ -1,6 +1,6 @@
 {
   "name": "pssh-tools-cli",
-  "version": "0.0.2-alpha1",
+  "version": "0.0.3",
   "description": "Command Line Interface for PSSH-TOOLS",
   "main": "index.js",
   "scripts": {
@@ -33,7 +33,7 @@
   "homepage": "https://github.com/feedsbrain/pssh-tools-cli#readme",
   "dependencies": {
     "commander": "^2.20.0",
-    "pssh-tools": "0.1.0-alpha2"
+    "pssh-tools": "^1.0.1"
   },
   "devDependencies": {
     "ava": "^2.1.0",
