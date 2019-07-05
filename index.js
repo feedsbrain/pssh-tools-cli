@@ -29,7 +29,7 @@ if (program.b64Data && program.widevine) {
 
 if (program.b64Data && program.playready) {
   const result = pssh.playready.decodeData(program.b64Data)
-  console.log(result)
+  console.log(result.recordXml)
 }
 
 // show help if no argument passes
