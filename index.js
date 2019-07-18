@@ -3,6 +3,7 @@
 const program = require('commander')
 const pssh = require('pssh-tools')
 
+const DRM_AES_KEYSIZE_128 = 16
 const PR_TEST_KEY_SEED = 'XVBovsmzhP9gRIZxWfFta3VVRPzVEWmJsazEJ46I'
 
 program
@@ -20,7 +21,22 @@ program
   .parse(process.argv)
 
 const base64ToHex = (base64String) => {
-  return Buffer.from(base64String, 'base64').toString('hex')
+  return swapEndian(base64String, 'base64').toString('hex')
+}
+
+const swapEndian = (keyId, keyEncoding = 'hex') => {
+  // Microsoft GUID endianness
+  const keyIdBytes = Buffer.from(keyId, keyEncoding)
+  const keyIdBuffer = Buffer.concat(
+    [
+      keyIdBytes.slice(0, 4).swap32(),
+      keyIdBytes.slice(4, 6).swap16(),
+      keyIdBytes.slice(6, 8).swap16(),
+      keyIdBytes.slice(8, 16)
+    ],
+    DRM_AES_KEYSIZE_128
+  )
+  return keyIdBuffer
 }
 
 if (program.b64) {
