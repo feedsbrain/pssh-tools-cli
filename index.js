@@ -17,6 +17,7 @@ program
   .option('-p, --b64 [pssh-box]', 'Parse the given base64 encoded PSSH box (universal)')
   .option('-d, --b64-data [pssh-data]', 'Parse the given base64 encoded PSSH data (combined with -W or -P switch)')
   .option('-r, --pro', 'Generate PlayReady PRO with given kid and key (optionally using key seed)')
+  .option('-l, --la-url [url]', 'Set PlayReady PRO License Acquisition URL (combined with -r switch)')
   .option('-h, --human', 'Convert output of base64 key to human readable hex format')
   .parse(process.argv)
 
@@ -57,7 +58,18 @@ if (program.kid) {
   result = pssh.playready.encodeKey(keyPair, !program.key ? PR_TEST_KEY_SEED : undefined)
 
   if (program.pro) {
-    const payload = { keyPairs: [{ kid: pssh.playready.decodeKey(result.kid), key: pssh.playready.decodeKey(result.key) }], keySeed: KeySeed, compatibilityMode: true, dataOnly: true }
+    const payload = {
+      keyPairs: [{
+        kid: pssh.playready.decodeKey(result.kid),
+        key: pssh.playready.decodeKey(result.key)
+      }],
+      keySeed: KeySeed,
+      compatibilityMode: true,
+      dataOnly: true
+    }
+    if (program.laUrl) {
+      payload.licenseUrl = program.laUrl
+    }
     result = pssh.playready.encodePssh(payload)
 
     if (result.dataObject) {
