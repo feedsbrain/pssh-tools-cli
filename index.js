@@ -6,19 +6,25 @@ const pssh = require('pssh-tools')
 const DRM_AES_KEYSIZE_128 = 16
 const PR_TEST_KEY_SEED = 'XVBovsmzhP9gRIZxWfFta3VVRPzVEWmJsazEJ46I'
 
+function collect (value, keyStore) {
+  keyStore.push(value)
+  return keyStore
+}
+
 program
   .version('0.1.0', '-v, --version')
   .option('-W, --widevine', 'Switch for Widevine')
   .option('-P, --playready', 'Switch for Playready')
   .option('-k, --b64-key [key]', 'Decode base64 PlayReady key')
-  .option('-e, --kid [key]', 'Encode hex kid for PlayReady')
-  .option('-c, --key [key]', 'Encode hex key for PlayReady')
-  .option('-K, --keySeed [key]', 'KeySeed for PlayReady key')
+  .option('-e, --kid [key]', 'Encode hex kid for PlayReady', collect, [])
+  .option('-c, --key [key]', 'Encode hex key for PlayReady', collect, [])
+  .option('-K, --key-seed [key]', 'KeySeed for PlayReady key')
   .option('-p, --b64 [pssh-box]', 'Parse the given base64 encoded PSSH box (universal)')
   .option('-d, --b64-data [pssh-data]', 'Parse the given base64 encoded PSSH data (combined with -W or -P switch)')
   .option('-r, --pro', 'Generate PlayReady PRO with given kid and key (optionally using key seed)')
   .option('-l, --la-url [url]', 'Set PlayReady PRO License Acquisition URL (combined with -r switch)')
   .option('-h, --human', 'Convert output of base64 key to human readable hex format')
+  .option('-n, --new-header', 'It will generate PRO w/ header version 4.2.0.0 if the value is set, otherwise it will use header version 4.0.0.0 (default)')
   .parse(process.argv)
 
 const base64ToHex = (base64String) => {
@@ -50,38 +56,49 @@ if (program.b64Key) {
   console.log(result)
 }
 
-if (program.kid) {
-  let result
-  let keyPair = { kid: program.kid, key: program.key || undefined }
-  let KeySeed = !program.key ? PR_TEST_KEY_SEED : undefined
+if (program.kid && program.kid.length) {
+  let keyPairs = []
+  let encodedKeyPairs = []
+  let keySeed = !program.key ? PR_TEST_KEY_SEED : undefined
 
-  result = pssh.playready.encodeKey(keyPair, !program.key ? PR_TEST_KEY_SEED : undefined)
+  for (let i = 0; i < program.kid.length; i++) {
+    try {
+      const key = program.key.length > i ? program.key[i] : undefined
+      const keyPair = { kid: program.kid[i], key: key }
+      const eKey = pssh.playready.encodeKey(keyPair, !key ? PR_TEST_KEY_SEED : undefined)
+      encodedKeyPairs.push(eKey)
+      keyPairs.push({
+        kid: pssh.playready.decodeKey(eKey.kid),
+        key: pssh.playready.decodeKey(eKey.key)
+      })
+    } catch (error) {
+      console.error('Failed when generating key pairs')
+      process.exit(1)
+    }
+  }
 
+  console.log('KEYS:')
+  if (program.human) {
+    keyPairs.forEach(keyPair => {
+      keyPair.kid = base64ToHex(keyPair.kid)
+      keyPair.key = base64ToHex(keyPair.key)
+    })
+  }
+  console.log(keyPairs)
+  console.log('\nPSSH-DATA:')
   if (program.pro) {
     const payload = {
-      keyPairs: [{
-        kid: pssh.playready.decodeKey(result.kid),
-        key: pssh.playready.decodeKey(result.key)
-      }],
-      keySeed: KeySeed,
-      compatibilityMode: true,
+      keyPairs: keyPairs,
+      keySeed: keySeed,
+      compatibilityMode: !program.newHeader && program.kid.length === 1,
       dataOnly: true
     }
     if (program.laUrl) {
       payload.licenseUrl = program.laUrl
     }
-    result = pssh.playready.encodePssh(payload)
-
-    if (result.dataObject) {
-      result = result.dataObject
-    }
-  } else {
-    if (program.human) {
-      result.kid = base64ToHex(result.kid)
-      result.key = base64ToHex(result.key)
-    }
+    let encodedPssh = pssh.playready.encodePssh(payload)
+    console.log(encodedPssh)
   }
-  console.log(result)
 }
 
 if (program.b64Data && program.widevine) {
