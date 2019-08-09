@@ -1,6 +1,6 @@
 {
   "name": "pssh-tools-cli",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Command Line Interface for PSSH-TOOLS",
   "main": "index.js",
   "scripts": {

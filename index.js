@@ -15,6 +15,7 @@ program
   .version('0.1.0', '-v, --version')
   .option('-W, --widevine', 'Switch for Widevine')
   .option('-P, --playready', 'Switch for Playready')
+  .option('-O, --dataOnly', 'Generate PSSH data only')
   .option('-k, --b64-key [key]', 'Decode base64 PlayReady key')
   .option('-e, --kid [key]', 'Encode hex kid for PlayReady', collect, [])
   .option('-c, --key [key]', 'Encode hex key for PlayReady', collect, [])
@@ -94,7 +95,7 @@ if (program.kid && program.kid.length) {
       keyPairs: keyPairs,
       keySeed: keySeed,
       compatibilityMode: !program.newHeader && program.kid.length === 1,
-      dataOnly: true
+      dataOnly: program.dataOnly
     }
     if (program.laUrl) {
       payload.licenseUrl = program.laUrl
@@ -105,7 +106,7 @@ if (program.kid && program.kid.length) {
 
   if (program.wvData) {
     if (program.contentId && program.provider) {
-      const payload = { contentId: program.contentId, keyIds: keyPairs.map((k) => { return k.kid }), provider: program.provider, protectionScheme: 'cenc', dataOnly: false }
+      const payload = { contentId: program.contentId, keyIds: keyPairs.map((k) => { return k.kid }), provider: program.provider, protectionScheme: 'cenc', dataOnly: program.dataOnly }
 
       let encodedPssh = pssh.widevine.encodePssh(payload)
       console.log(encodedPssh)
