@@ -20,18 +20,49 @@ program
   .option('-e, --kid [key]', 'Encode hex kid for PlayReady', collect, [])
   .option('-c, --key [key]', 'Encode hex key for PlayReady', collect, [])
   .option('-K, --key-seed [key]', 'KeySeed for PlayReady key')
-  .option('-p, --b64 [pssh-box]', 'Parse the given base64 encoded PSSH box (universal)')
-  .option('-d, --b64-data [pssh-data]', 'Parse the given base64 encoded PSSH data (combined with -W or -P switch)')
-  .option('-r, --pro', 'Generate PlayReady PRO with given kid and key (optionally using key seed)')
-  .option('-w, --wv-data', 'Generate Widevine data with given kid(s) and key(s)')
-  .option('-i, --content-id [id]', 'Set Content ID value to generate Widevine PSSH')
-  .option('-o, --provider [name]', 'Set Provider value to generate Widevine PSSH')
-  .option('-l, --la-url [url]', 'Set PlayReady PRO License Acquisition URL (combined with -r switch)')
-  .option('-h, --human', 'Convert output of base64 key to human readable hex format')
-  .option('-n, --new-header', 'It will generate PRO w/ header version 4.2.0.0 if the value is set, otherwise it will use header version 4.0.0.0 (default)')
+  .option(
+    '-C, --checksum',
+    'Switch to exclude checksum calculation on PlayReady PRO'
+  )
+  .option(
+    '-p, --b64 [pssh-box]',
+    'Parse the given base64 encoded PSSH box (universal)'
+  )
+  .option(
+    '-d, --b64-data [pssh-data]',
+    'Parse the given base64 encoded PSSH data (combined with -W or -P switch)'
+  )
+  .option(
+    '-r, --pro',
+    'Generate PlayReady PRO with given kid and key (optionally using key seed)'
+  )
+  .option(
+    '-w, --wv-data',
+    'Generate Widevine data with given kid(s) and key(s)'
+  )
+  .option(
+    '-i, --content-id [id]',
+    'Set Content ID value to generate Widevine PSSH'
+  )
+  .option(
+    '-o, --provider [name]',
+    'Set Provider value to generate Widevine PSSH'
+  )
+  .option(
+    '-l, --la-url [url]',
+    'Set PlayReady PRO License Acquisition URL (combined with -r switch)'
+  )
+  .option(
+    '-h, --human',
+    'Convert output of base64 key to human readable hex format'
+  )
+  .option(
+    '-n, --new-header',
+    'It will generate PRO w/ header version 4.2.0.0 if the value is set, otherwise it will use header version 4.0.0.0 (default)'
+  )
   .parse(process.argv)
 
-const base64ToHex = (base64String) => {
+const base64ToHex = base64String => {
   return swapEndian(base64String, 'base64').toString('hex')
 }
 
@@ -61,15 +92,18 @@ if (program.b64Key) {
 }
 
 if (program.kid && program.kid.length) {
-  let keyPairs = []
-  let encodedKeyPairs = []
-  let keySeed = !program.key ? PR_TEST_KEY_SEED : undefined
+  const keyPairs = []
+  const encodedKeyPairs = []
+  const keySeed = !program.key ? PR_TEST_KEY_SEED : undefined
 
   for (let i = 0; i < program.kid.length; i++) {
     try {
       const key = program.key.length > i ? program.key[i] : undefined
       const keyPair = { kid: program.kid[i], key: key }
-      const eKey = pssh.playready.encodeKey(keyPair, !key ? PR_TEST_KEY_SEED : undefined)
+      const eKey = pssh.playready.encodeKey(
+        keyPair,
+        !key ? PR_TEST_KEY_SEED : undefined
+      )
       encodedKeyPairs.push(eKey)
       keyPairs.push({
         kid: pssh.playready.decodeKey(eKey.kid),
@@ -95,23 +129,34 @@ if (program.kid && program.kid.length) {
       keyPairs: keyPairs,
       keySeed: keySeed,
       compatibilityMode: !program.newHeader && program.kid.length === 1,
-      dataOnly: program.dataOnly
+      dataOnly: program.dataOnly,
+      checksum: !program.checksum
     }
     if (program.laUrl) {
       payload.licenseUrl = program.laUrl
     }
-    let encodedPssh = pssh.playready.encodePssh(payload)
+    const encodedPssh = pssh.playready.encodePssh(payload)
     console.log(encodedPssh)
   }
 
   if (program.wvData) {
     if (program.contentId && program.provider) {
-      const payload = { contentId: program.contentId, keyIds: keyPairs.map((k) => { return k.kid }), provider: program.provider, protectionScheme: 'cenc', dataOnly: program.dataOnly }
+      const payload = {
+        contentId: program.contentId,
+        keyIds: keyPairs.map(k => {
+          return k.kid
+        }),
+        provider: program.provider,
+        protectionScheme: 'cenc',
+        dataOnly: program.dataOnly
+      }
 
-      let encodedPssh = pssh.widevine.encodePssh(payload)
+      const encodedPssh = pssh.widevine.encodePssh(payload)
       console.log(encodedPssh)
     } else {
-      console.log('Provide Content ID and Provider name to generate Widevine PSSH')
+      console.log(
+        'Provide Content ID and Provider name to generate Widevine PSSH'
+      )
     }
   }
 }
