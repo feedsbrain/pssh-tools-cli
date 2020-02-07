@@ -116,6 +116,7 @@ if (program.kid && program.kid.length) {
   }
 
   console.log('KEYS:')
+  console.log(encodedKeyPairs)
   if (program.human) {
     keyPairs.forEach(keyPair => {
       keyPair.kid = base64ToHex(keyPair.kid)
