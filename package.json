@@ -8,7 +8,7 @@
     "build"
   ],
   "scripts": {
-    "pretest": "eslint . --ext ts ",
+    "pretest": "eslint . --ext ts",
     "build": "eslint . --ext ts && tsc -p .",
     "watch": "tsc --watch",
     "start": "node build/index.js",
