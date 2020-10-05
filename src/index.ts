@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
-const program = require('commander')
-const pssh = require('pssh-tools')
+import * as program from 'commander'
+import * as pssh from 'pssh-tools'
+
+import { PlayReadyData } from 'pssh-tools'
 
 const DRM_AES_KEYSIZE_128 = 16
 const PR_TEST_KEY_SEED = 'XVBovsmzhP9gRIZxWfFta3VVRPzVEWmJsazEJ46I'
 
-function collect (value, keyStore) {
+type BufferEncoding = 'ascii' | 'utf8' | 'utf-8' | 'utf16le' | 'ucs2' | 'ucs-2' | 'base64' | 'latin1' | 'binary' | 'hex'
+
+function collect (value: string, keyStore: string[]) {
   keyStore.push(value)
   return keyStore
 }
@@ -62,11 +66,11 @@ program
   )
   .parse(process.argv)
 
-const base64ToHex = base64String => {
+const base64ToHex = (base64String: string) => {
   return swapEndian(base64String, 'base64').toString('hex')
 }
 
-const swapEndian = (keyId, keyEncoding = 'hex') => {
+const swapEndian = (keyId: string, keyEncoding: BufferEncoding = 'hex') => {
   // Microsoft GUID endianness
   const keyIdBytes = Buffer.from(keyId, keyEncoding)
   const keyIdBuffer = Buffer.concat(
@@ -83,7 +87,9 @@ const swapEndian = (keyId, keyEncoding = 'hex') => {
 
 if (program.b64) {
   const result = pssh.tools.decodePssh(program.b64)
-  console.log(result.printPssh())
+  if (result && result.printPssh) {
+    result.printPssh()
+  }
 }
 
 if (program.b64Key) {
@@ -131,7 +137,8 @@ if (program.kid && program.kid.length) {
       keySeed: keySeed,
       compatibilityMode: !program.newHeader && program.kid.length === 1,
       dataOnly: program.dataOnly,
-      checksum: !program.checksum
+      checksum: !program.checksum,
+      licenseUrl: undefined
     }
     if (program.laUrl) {
       payload.licenseUrl = program.laUrl
@@ -169,7 +176,9 @@ if (program.b64Data && program.widevine) {
 
 if (program.b64Data && program.playready) {
   const result = pssh.playready.decodeData(program.b64Data)
-  console.log(result.recordXml)
+  if (result) {
+    console.log((result as PlayReadyData).recordXml)
+  }
 }
 
 // show help if no argument passes
